@@ -1,6 +1,6 @@
 # DummyBackend (Generator Service)
 
-Spring Boot API that generates realistic dummy data from a JSON schema, backed by selectable LLM providers (OpenAI, Claude, Grok).
+Spring Boot API that generates realistic dummy data from a JSON schema, backed by selectable LLM providers (OpenAI, Claude, Grok, Groq).
 
 ## Tech Stack
 
@@ -8,7 +8,7 @@ Spring Boot API that generates realistic dummy data from a JSON schema, backed b
 - **Spring Boot 4.1** (Web, Validation)
 - **Maven**
 - **Lombok**
-- **LLM providers** via HTTP (`RestClient`) — OpenAI, Claude (Anthropic), Grok (xAI)
+- **LLM providers** via HTTP (`RestClient`) — OpenAI, Claude (Anthropic), Grok (xAI), Groq (free-tier, recommended for local testing)
 
 ## Project Structure
 
@@ -29,7 +29,8 @@ src/main/java/com/dummybackend/generatorservice/
 │   ├── LlmProvidersProperties.java    # Per-provider config
 │   ├── OpenAiLlmProvider.java
 │   ├── ClaudeLlmProvider.java
-│   ├── GrokLlmProvider.java
+│   ├── GrokLlmProvider.java           # xAI Grok
+│   ├── GroqLlmProvider.java           # Groq (free tier)
 │   └── ChatCompletionsSupport.java    # Shared OpenAI-compatible helpers
 ├── service/
 │   ├── GeneratorService.java          # Orchestrates prompt + LLM + parse
@@ -48,31 +49,44 @@ src/main/java/com/dummybackend/generatorservice/
 - JDK 17+
 - Maven 3.9+ (or use the included Maven Wrapper)
 - API key(s) for the provider(s) you use:
+  - `GROQ_API_KEY` (default provider; free tier, good for local testing)
   - `OPENAI_API_KEY`
   - `ANTHROPIC_API_KEY` (Claude)
-  - `GROK_API_KEY`
+  - `GROK_API_KEY` (xAI Grok — not the same as Groq)
 
 Unused providers do not need keys; the key is checked only when that provider is selected.
 
+## Secrets (`.env`)
+
+API keys are read from environment variables (see `application.properties`). Locally, put them in a project-root **`.env`** file — Spring Boot loads it via `springboot4-dotenv` (real OS env vars still take precedence).
+
+1. Copy `.env.example` → `.env`
+2. Fill in the keys you need (at least `GROQ_API_KEY` for the default provider)
+3. Keep `.env` out of git (already in `.gitignore`)
+
 ## Configuration
 
-Set in `src/main/resources/application.properties` or via environment variables:
+Set in `src/main/resources/application.properties`, `.env`, or OS environment variables:
 
 | Property | Description | Default |
 |---|---|---|
 | `server.port` | HTTP port | `8000` |
-| `llm.default-provider` | Used when request omits `provider` | `openai` |
+| `llm.default-provider` | Used when request omits `provider` | `groq` |
 | `llm.openai.*` | `base-url`, `api-key`, `model`, `max-tokens` | see `application.properties` |
 | `llm.claude.*` | same | … |
-| `llm.grok.*` | same | … |
+| `llm.grok.*` | same (xAI) | … |
+| `llm.groq.*` | same (Groq free tier) | … |
 
-API keys are env-backed:
+API keys are env-backed (from `.env` or the real environment):
 
 ```properties
+llm.groq.api-key=${GROQ_API_KEY:}
 llm.openai.api-key=${OPENAI_API_KEY:}
 llm.claude.api-key=${ANTHROPIC_API_KEY:}
 llm.grok.api-key=${GROK_API_KEY:}
 ```
+
+**Note:** `groq` (Groq) and `grok` (xAI) are different providers.
 
 ## Run
 
@@ -109,7 +123,7 @@ Content-Type: application/json
 
 | Field | Type | Required | Constraints |
 |---|---|---|---|
-| `provider` | string | no (defaults to `openai`) | `openai`, `claude`, or `grok` |
+| `provider` | string | no (defaults to `groq`) | `openai`, `claude`, `grok`, or `groq` |
 | `count` | integer | no (defaults to `1`) | 1–50 |
 | `schema` | object | yes | 1–30 fields |
 
@@ -117,7 +131,7 @@ Content-Type: application/json
 
 ```json
 {
-  "provider": "openai",
+  "provider": "groq",
   "count": 3,
   "schema": {
     "name": "string",

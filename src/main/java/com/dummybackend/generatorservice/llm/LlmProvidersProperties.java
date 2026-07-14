@@ -7,7 +7,8 @@ public record LlmProvidersProperties(
         String defaultProvider,
         ProviderConfig openai,
         ProviderConfig claude,
-        ProviderConfig grok
+        ProviderConfig grok,
+        ProviderConfig groq
 ) {
     public record ProviderConfig(
             String baseUrl,
