@@ -24,4 +24,10 @@ public class GlobalExceptionHandler {
                 .toList();
         return ResponseEntity.badRequest().body(new ErrorResponse("Invalid request", errors));
     }
+
+    @ExceptionHandler(LlmGenerationException.class)
+    public ResponseEntity<ErrorResponse> handleLlmGeneration(LlmGenerationException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(new ErrorResponse("LLM generation failed", List.of(ex.getMessage())));
+    }
 }
