@@ -25,6 +25,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(new ErrorResponse("Invalid request", errors));
     }
 
+    @ExceptionHandler(UnknownLlmProviderException.class)
+    public ResponseEntity<ErrorResponse> handleUnknownProvider(UnknownLlmProviderException ex) {
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse("Invalid provider", List.of(ex.getMessage())));
+    }
+
     @ExceptionHandler(LlmGenerationException.class)
     public ResponseEntity<ErrorResponse> handleLlmGeneration(LlmGenerationException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)

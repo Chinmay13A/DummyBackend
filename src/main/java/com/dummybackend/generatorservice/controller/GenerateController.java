@@ -22,6 +22,6 @@ public class GenerateController {
     @PostMapping("/generate")
     public GenerateResponse generateResponse(@Valid @RequestBody GenerateRequest body){
         schemaValidator.validate(body.schema());
-        generatorService.generate(body);
+        return generatorService.generate(body);
     }
 }

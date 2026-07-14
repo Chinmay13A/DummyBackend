@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.Map;
 
 public record GenerateRequest(
+        String provider,
+
         @Min(value = 1, message = "count must be least 1")
         @Max(value = 50, message = "count must not exceed 50")
         Integer count,
