@@ -213,16 +213,48 @@ Each field in `schema` can be a shorthand type string or an object:
 - Shorthand: `"age": "integer"` → `{ "type": "integer" }`
 - Full: `"age": { "type": "integer", "min": 18, "max": 65 }`
 
-**Allowed types:** `string`, `integer`, `float`, `boolean`, `date`, `enum`
+**Allowed types:** `string`, `integer`, `float`, `boolean`, `date`, `enum`, `object`, `array`
 
 | Constraint | Applies to | Notes |
 |---|---|---|
 | `type` | all | required |
 | `min` / `max` | `integer`, `float` | `min` must not exceed `max` |
 | `values` | `enum` | required non-empty array |
+| `fields` | `object` | required non-empty map of nested field definitions |
+| `items` | `array` | required; type string or full field definition (including nested `object`) |
 | `description` | any | optional hint for the LLM |
 
-Max **30** fields per schema.
+- Max **30** fields **per object level**
+- Max nesting depth **3** (root schema is depth 0)
+
+**Nested example**
+
+```json
+{
+  "name": "string",
+  "address": {
+    "type": "object",
+    "fields": {
+      "city": "string",
+      "zip": "integer"
+    }
+  },
+  "tags": {
+    "type": "array",
+    "items": "string"
+  },
+  "orders": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "fields": {
+        "id": "integer",
+        "total": "float"
+      }
+    }
+  }
+}
+```
 
 ## Error Responses
 

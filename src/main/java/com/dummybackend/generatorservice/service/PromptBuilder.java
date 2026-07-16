@@ -29,6 +29,9 @@ public class PromptBuilder {
             - Infer the semantic meaning of each field from its name (e.g. "email" should be a valid email, "dob" a plausible past date).
             - Respect the declared "type" for each field strictly.
             - Respect any "min", "max", "values" (for enum), or "description" constraints exactly.
+            - For "object" fields, the value must be a JSON object whose keys match the nested "fields" map.
+            - For "array" fields, the value must be a JSON array; each element must match the "items" definition.
+            - Nested object and array structures must follow the same type and constraint rules as top-level fields.
             - Return ONLY a valid JSON array of %d objects. No explanations, no markdown, no code fences.
             - Each object in the array must have exactly the same keys as the schema.
             """.formatted(count, schemaJson, count);
@@ -54,6 +57,9 @@ public class PromptBuilder {
             - Infer the semantic meaning of each field from its name (e.g. "email" should be a valid email, "dob" a plausible past date).
             - Respect the declared "type" for each field strictly.
             - Respect any "min", "max", "values" (for enum), or "description" constraints exactly.
+            - For "object" fields, the value must be a JSON object whose keys match the nested "fields" map.
+            - For "array" fields, the value must be a JSON array; each element must match the "items" definition.
+            - Nested object and array structures must follow the same type and constraint rules as top-level fields.
             - Return ONLY a valid JSON array of exactly %d objects. No explanations, no markdown, no code fences.
             - Each object in the array must have exactly the same keys as the schema.
             - Do not return fewer or more than %d objects.
