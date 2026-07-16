@@ -124,8 +124,10 @@ Content-Type: application/json
 | Field | Type | Required | Constraints |
 |---|---|---|---|
 | `provider` | string | no (defaults to `groq`) | `openai`, `claude`, `grok`, or `groq` |
-| `count` | integer | no (defaults to `1`) | 1–50 |
+| `count` | integer | no (defaults to `1`) | 1–50; response always contains exactly this many records |
 | `schema` | object | yes | 1–30 fields |
+
+**Exact count:** If the LLM returns too many records, extras are truncated. If it returns too few, the service retries once with a corrective prompt; if still short, the API responds with **502**.
 
 **Example**
 
