@@ -9,6 +9,7 @@ Spring Boot API that generates realistic dummy data from a JSON schema, backed b
 - **Maven**
 - **Lombok**
 - **LLM providers** via HTTP (`RestClient`) — OpenAI, Claude (Anthropic), Grok (xAI), Groq (free-tier, recommended for local testing)
+- **Bucket4j** — in-memory per-IP rate limiting on `POST /generate`
 
 ## Project Structure
 
@@ -16,7 +17,7 @@ Spring Boot API that generates realistic dummy data from a JSON schema, backed b
 src/main/java/com/dummybackend/generatorservice/
 ├── GeneratorserviceApplication.java
 ├── config/
-│   └── LlmConfig.java                 # Enables LLM configuration properties
+│   └── AppConfig.java                 # Enables configuration properties
 ├── controller/
 │   ├── GenerateController.java        # POST /generate
 │   └── HealthController.java          # GET /health
@@ -32,6 +33,10 @@ src/main/java/com/dummybackend/generatorservice/
 │   ├── GrokLlmProvider.java           # xAI Grok
 │   ├── GroqLlmProvider.java           # Groq (free tier)
 │   └── ChatCompletionsSupport.java    # Shared OpenAI-compatible helpers
+├── ratelimit/
+│   ├── RateLimitProperties.java       # enabled + requests-per-minute
+│   ├── RateLimitService.java          # Per-IP Bucket4j buckets
+│   └── RateLimitFilter.java           # OncePerRequestFilter on /generate
 ├── service/
 │   ├── GeneratorService.java          # Orchestrates prompt + LLM + parse
 │   ├── PromptBuilder.java
@@ -71,6 +76,8 @@ Set in `src/main/resources/application.properties`, `.env`, or OS environment va
 | Property | Description | Default |
 |---|---|---|
 | `server.port` | HTTP port | `8000` |
+| `rate-limit.enabled` | Enable per-IP rate limiting on `POST /generate` | `true` |
+| `rate-limit.requests-per-minute` | Max requests per IP per minute | `10` |
 | `llm.default-provider` | Used when request omits `provider` | `groq` |
 | `llm.openai.*` | `base-url`, `api-key`, `model`, `max-tokens` | see `application.properties` |
 | `llm.claude.*` | same | … |
@@ -177,6 +184,28 @@ Content-Type: application/json
 }
 ```
 
+## Rate limiting
+
+`POST /generate` is limited **per client IP** (in-memory Bucket4j token bucket). `/health` is not limited.
+
+- Client key: first hop of `X-Forwarded-For`, otherwise `RemoteAddr`
+- Buckets reset when the process restarts (single-instance MVP; not Redis/distributed)
+
+When exceeded:
+
+- **Status:** `429 Too Many Requests`
+- **Header:** `Retry-After: 60`
+- **Body:**
+
+```json
+{
+  "message": "Rate limit exceeded",
+  "details": ["Too many requests. Limit is 10 requests per minute per IP."]
+}
+```
+
+Set `rate-limit.enabled=false` to disable locally.
+
 ## Schema Format
 
 Each field in `schema` can be a shorthand type string or an object:
@@ -209,6 +238,7 @@ All errors use:
 | Status | When |
 |---|---|
 | `400 Bad Request` | Invalid request body, schema, or unknown `provider` |
+| `429 Too Many Requests` | Per-IP rate limit exceeded on `POST /generate` |
 | `502 Bad Gateway` | LLM call or parse failure |
 
 ## Adding a new provider
