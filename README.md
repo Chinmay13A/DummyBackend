@@ -77,7 +77,7 @@ Set in `src/main/resources/application.properties`, `.env`, or OS environment va
 |---|---|---|
 | `server.port` | HTTP port | `8000` |
 | `rate-limit.enabled` | Enable per-IP rate limiting on `POST /generate` | `true` |
-| `rate-limit.requests-per-minute` | Max requests per IP per minute | `10` |
+| `rate-limit.requests-per-minute` | Max requests per IP per minute | `5` |
 | `llm.default-provider` | Used when request omits `provider` | `groq` |
 | `llm.openai.*` | `base-url`, `api-key`, `model`, `max-tokens` | see `application.properties` |
 | `llm.claude.*` | same | … |
@@ -200,7 +200,7 @@ When exceeded:
 ```json
 {
   "message": "Rate limit exceeded",
-  "details": ["Too many requests. Limit is 10 requests per minute per IP."]
+  "details": ["Too many requests. Limit is 5 requests per minute per IP."]
 }
 ```
 
